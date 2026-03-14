@@ -1,0 +1,143 @@
+{% extends "store/layout.html" %}
+{% load static %}
+
+
+{% block body %}
+
+<style>
+    .hero {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("{% static 'images/home.jpg' %}");
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero text-center text-white py-5">
+       <div class="container">
+           <h1>Welcome </h1>
+           <h2>to</h2>
+           <h2>Lafont's Flowers</h2>
+           <p>Fresh  Beautiful Affordable</p> 
+           
+        </div>
+</section>
+
+<!-- About Section -->
+<section class="about py-5 text-center">
+    <div class="container">
+        <h2>Lafont's Flowers</h2>
+        <p>At Lafont's Flowers in Florida, we love helping you celebrate life's special moments with our wide selection of fresh flowers! Whether you're planning a wedding, birthday, party, or corporate event, we're here to make your experience easy and enjoyable. Placing your order is simple, and we work swiftly to ensure your beautiful flowers arrive on time. Your happiness and the freshness of our flowers are our top priorities, so every arrangement is created with care and joy to brighten your day.</p>
+    </div>
+</section>
+
+<!-- Shop Section -->
+<section class="shop py-5 text-center">
+    <div class="container">
+        <h2>SHOP</h2>
+        <p>Discover our wide selection of fresh flowers and beautiful arrangements.</p>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="{% static 'images/flowers.jpg' %}" class="card-img-top" alt="Flowers">
+                    <div class="card-body">
+                        <h5 class="card-title">FLOWERS</h5>
+                        <p class="card-text">Fresh, Local Flowers for pick up or delivery in Florida.</p>
+                     </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="{% static 'images/gift.jpg' %}" class="card-img-top" alt="Gifts">
+                    <div class="card-body">
+                        <h5 class="card-title">GIFTS</h5>
+                        <p class="card-text">Beautiful gift options for any occasion. Coming soon!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="{% static 'images/floral_arrangement.jpg' %}" class="card-img-top" alt="Floral Arrangements">
+                    <div class="card-body">
+                        <h5 class="card-title">Floral Arrangements</h5>
+                        <p class="card-text"> Floral arrangements for any occasion. Coming soon!!</p>
+                 </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Follow Us Section -->
+<section class="follow py-5 text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-6 col-md-3 mb-3">
+                <i style="font-size: 2rem;" class="fa-brands fa-square-instagram"></i>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+               <i  style="font-size: 2rem;" class="fa-brands fa-facebook"></i>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <i style="font-size: 2rem;" class="fa-brands fa-x-twitter"></i>
+            </div>
+            <div  class="col-6 col-md-3 mb-3">
+               <i style="font-size: 2rem;" class="fa-brands fa-tiktok"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section (Integrating your original product list) -->
+<section class="featured py-5">
+    <hr>
+    <div class="container">
+        <h2>Featured Products</h2>
+        <div class="row g-3 featured-scroll-row">
+            {% for p in featured_products %}
+                <div class="col-md-4 mb-4 featured-item">
+                    <div class="card">
+                        {% if p.product.url_image %}
+                            <img src="{{ p.product.url_image }}" class="card-img-top img-fluid featured-img" alt="{{ p.product.name }}">
+                        {% else %}
+                            <img src="{% static 'images/placeholder.jpg' %}" class="card-img-top img-fluid featured-img" alt="Placeholder">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ p.product.name }}</h5>
+                        </div> 
+                    </div>
+                </div>
+            {% empty %}
+           
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+</section>
+
+
+<!-- Contact us -->
+<section class="follow py-5 text-center">
+   <div class="container text-center">
+  <div class="row">
+    <div class="col">
+        <figure class="figure">
+            <img src="{% static 'images/lf.png' %}" class="figure-img img-fluid rounded" alt="Wedding">
+            <img src="{% static 'images/table.jpg' %}" class="figure-img img-fluid rounded" alt="Wedding">
+            <img src="{% static 'images/event.jpg' %}" class="figure-img img-fluid rounded" alt="Wedding">
+            <img src="{% static 'images/thank.png' %}" class="figure-img img-fluid rounded" alt="Wedding">
+        </figure>
+    </div>
+    <div class="col">
+        <h4> Planning an event?</h4> 
+        <p> We're here to help make it special!<br>
+         We offer beautiful fresh flowers in bulk, perfect for everything <br>
+        from weddings and corporate events to parties and beyond. Reach out to us <br>
+        for a custom order,and we'll work with you to create something truly memorable. <br>
+        Plus, enjoy our fast, secure delivery right to your door, available lmost <br>
+        anywhere in South Florida.</p>
+    <a href="{% url 'contact' %}" class="btn btn-outline-secondary">Contact Us</a>    
+    </div>
+  </div>
+   </div>
+</section>
+
+{% endblock %}

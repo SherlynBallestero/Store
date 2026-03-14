@@ -1,0 +1,79 @@
+{% extends "store/layout.html" %}
+{% load static %}
+
+{% block body %}
+<section class="cart-page py-5">
+	<div class="container">
+		<h2 class="mb-4">Your Cart</h2>
+
+		{% if messages %}
+			{% for message in messages %}
+				<div class="alert alert-{{ message.tags|default:'info' }}" role="alert">{{ message }}</div>
+			{% endfor %}
+		{% endif %}
+
+		{% if cart_items %}
+			<div class="table-responsive">
+				<table class="table align-middle">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th>Unit Price</th>
+							<th style="width: 170px;">Quantity</th>
+							<th>Subtotal</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for item in cart_items %}
+							<tr>
+								<td>
+									<div class="d-flex align-items-center gap-3">
+										{% if item.product.url_image %}
+											<img src="{{ item.product.url_image }}" alt="{{ item.product.name }}" class="cart-thumb">
+										{% else %}
+											<img src="{% static 'images/flowers.jpg' %}" alt="{{ item.product.name }}" class="cart-thumb">
+										{% endif %}
+										<span>{{ item.product.name }}</span>
+									</div>
+								</td>
+								<td>${{ item.product.unit_price }}</td>
+								<td>
+									<form method="post" class="d-flex gap-2 align-items-center">
+										{% csrf_token %}
+										<input type="hidden" name="action" value="update">
+										<input type="hidden" name="product_id" value="{{ item.product.id }}">
+										<input type="number" min="1" name="quantity" value="{{ item.quantity }}" class="form-control form-control-sm">
+										<button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
+									</form>
+								</td>
+								<td>${{ item.subtotal }}</td>
+								<td>
+									<form method="post">
+										{% csrf_token %}
+										<input type="hidden" name="action" value="remove">
+										<input type="hidden" name="product_id" value="{{ item.product.id }}">
+										<button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+									</form>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="cart-summary ms-auto">
+				<h5 class="mb-2">Order Summary</h5>
+				<p class="mb-2"><strong>Total:</strong> ${{ cart_total }}</p>
+				<a href="{% url 'checkout' %}" class="btn btn-primary w-100">Proceed to Checkout</a>
+			</div>
+		{% else %}
+			<div class="text-center py-5">
+				<h5>Your cart is empty.</h5>
+				<p class="text-muted">Add products from the catalog to start your order.</p>
+				<a href="{% url 'catalog' %}" class="btn btn-primary">Go to Catalog</a>
+			</div>
+		{% endif %}
+	</div>
+</section>
+{% endblock %}

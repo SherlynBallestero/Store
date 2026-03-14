@@ -1,0 +1,75 @@
+{% extends "store/layout.html" %}
+{% load static %}
+
+
+{% block body %}
+
+<section class="about-page-hero py-5">
+	<div class="container">
+		<div class="row align-items-center g-4">
+			<div class="col-12 col-lg-6">
+				<p class="about-eyebrow mb-2">Our Story</p>
+				<h1 class="about-title">Flowers with soul, crafted for real moments.</h1>
+				<p class="about-lead mt-3 mb-0">
+					At Lafont's Flowers, we blend creativity and freshness to design arrangements that feel warm, natural, and memorable.
+				</p>
+			</div>
+			<div class="col-12 col-lg-6">
+				<img src="{% static 'images/about.jpg' %}" class="img-fluid rounded-4 about-hero-img" alt="Lafont's Flowers store display">
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="about-story py-5">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-12 col-lg-9 text-center">
+				<h2 class="mb-3">Who We Are</h2>
+				<p class="mb-0">
+					We are a local floral studio in South Florida focused on quality stems, intentional design, and kind service. Whether it's a birthday,
+					a wedding, or an everyday surprise, we create arrangements that feel personal and elegant without being overdone.
+				</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="about-values py-5">
+	<div class="container">
+		<div class="row g-4">
+			<div class="col-12 col-md-4">
+				<article class="value-card h-100">
+					<h5>Freshness First</h5>
+					<p class="mb-0">We work with fresh inventory daily so your flowers look beautiful longer.</p>
+				</article>
+			</div>
+			<div class="col-12 col-md-4">
+				<article class="value-card h-100">
+					<h5>Thoughtful Design</h5>
+					<p class="mb-0">Each bouquet is arranged with balance, texture, and natural movement.</p>
+				</article>
+			</div>
+			<div class="col-12 col-md-4">
+				<article class="value-card h-100">
+					<h5>Local Care</h5>
+					<p class="mb-0">We are a neighborhood business and we treat every order with attention.</p>
+				</article>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="about-cta py-5 text-center">
+	<div class="container">
+		<h3 class="mb-3">Planning something special?</h3>
+		<p class="mb-4">Let's design flowers that match your day perfectly.</p>
+		<a href="{% url 'contact' %}" class="btn btn-primary about-cta-btn">Talk to Us</a>
+	</div>
+</section>
+
+
+
+
+
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "store/layout.html" %}
+
+{% block body %}
+<section class="contact-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-9 col-lg-7">
+                <div class="contact-card">
+                    <h2 class="text-center mb-2">Contact Us</h2>
+                    <p class="text-center text-muted mb-4">Send us your request and we will get back to you shortly.</p>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="d-grid gap-3">
+                        {% csrf_token %}
+
+                        <div>
+                            <label class="form-label">Intent</label>
+                            <div class="contact-radio-group">
+                                {{ form.intent }}
+                            </div>
+                            {% if form.intent.errors %}
+                                <small class="text-danger">{{ form.intent.errors|striptags }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                            <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}" class="form-control" required>
+                            {% if form.name.errors %}
+                                <small class="text-danger">{{ form.name.errors|striptags }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" value="{{ form.email.value|default:'' }}" class="form-control" required>
+                            {% if form.email.errors %}
+                                <small class="text-danger">{{ form.email.errors|striptags }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.comments.id_for_label }}" class="form-label">Comments</label>
+                            <textarea name="{{ form.comments.name }}" id="{{ form.comments.id_for_label }}" rows="4" class="form-control" placeholder="(optional)">{{ form.comments.value|default:'' }}</textarea>
+                            {% if form.comments.errors %}
+                                <small class="text-danger">{{ form.comments.errors|striptags }}</small>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary contact-submit">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

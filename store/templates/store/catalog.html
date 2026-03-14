@@ -1,0 +1,75 @@
+{% extends "store/layout.html" %}
+{% load static %}
+
+
+{% block body %}
+
+<section class="catalog-section py-5">
+    <div class="container">
+        <form method="get" class="catalog-filters mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label for="catalog-search" class="form-label">Search</label>
+                    <input id="catalog-search" type="text" name="q" class="form-control" placeholder="Rose, tulip, bouquet..." value="{{ search_term }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="catalog-type" class="form-label">Type</label>
+                    <select id="catalog-type" name="type" class="form-select">
+                        <option value="">All</option>
+                        {% for value, label in product_types %}
+                        <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="catalog-color" class="form-label">Color</label>
+                    <select id="catalog-color" name="color" class="form-select">
+                        <option value="">All</option>
+                        {% for color in available_colors %}
+                        <option value="{{ color }}" {% if selected_color == color %}selected{% endif %}>{{ color }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="catalog-min-price" class="form-label">Min Price</label>
+                    <input id="catalog-min-price" type="number" step="0.01" name="min_price" class="form-control" value="{{ min_price }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="catalog-max-price" class="form-label">Max Price</label>
+                    <input id="catalog-max-price" type="number" step="0.01" name="max_price" class="form-control" value="{{ max_price }}">
+                </div>
+                <div class="col-12 col-md-1 d-grid">
+                    <button type="submit" class="btn btn-dark">Apply</button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'catalog' %}" class="btn btn-link ps-0">Clear filters</a>
+            </div>
+        </form>
+
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3">
+            {% for product in products %}
+            <div class="col">
+                <div class="card border-info mb-3 card catalog-card h-100">
+                    {% if product.url_image %}
+                    <img src="{{ product.url_image }}" class="catalog-img" alt="{{ product.name }}">
+                    {% else %}
+                    <img src="{% static 'images/flowers.jpg' %}" class="catalog-img" alt="{{ product.name }}">
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                       <p class="card-text mt-auto"><strong>${{ product.unit_price }}</strong></p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-info ">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">No products available right now.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
