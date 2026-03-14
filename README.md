@@ -98,7 +98,7 @@ python -m venv .venv
 2. Install dependencies.
 
 ```powershell
-pip install django
+pip install -r requirements.txt
 ```
 
 3. Apply migrations.
@@ -145,4 +145,4 @@ If no environment variables are set, the app defaults to Django's console email 
 
 - Database is SQLite by default (`db.sqlite3`).
 - Some pages currently use template placeholders (`about`, `profile`, `checkout`, `confirmation`).
-- No dependency lock file is currently included (`requirements.txt` is not present).
+- Dependencies are defined in `requirements.txt`.
