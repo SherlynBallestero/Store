@@ -124,6 +124,61 @@ python manage.py runserver
 - `http://127.0.0.1:8000/store/`
 - `http://127.0.0.1:8000/admin/`
 
+## Environment Variables (.env)
+
+1. Create your local `.env` file from `.env.example`.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+2. Edit `.env` and set at least:
+
+- `SECRET_KEY`
+- `DEBUG`
+- `ALLOWED_HOSTS`
+- `CSRF_TRUSTED_ORIGINS`
+- `STRIPE_PUBLIC_KEY`
+- `STRIPE_SECRET_KEY`
+
+3. Never commit `.env` to git. The project `.gitignore` already excludes it.
+
+## Stripe Test Mode (Local)
+
+- Use Stripe test keys (`pk_test_...`, `sk_test_...`).
+- Use test card: `4242 4242 4242 4242`, any future date, any CVC.
+
+## Deploying to Hostinger (Recommended: VPS)
+
+Hostinger shared web hosting is optimized for PHP. For Django + Stripe, a VPS plan is recommended.
+
+1. Upload project and create virtual environment.
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Set production environment variables in server panel or shell:
+
+- `DEBUG=False`
+- `SECRET_KEY=<strong-random-secret>`
+- `ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com`
+- `CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com`
+- `STRIPE_PUBLIC_KEY=pk_live_...`
+- `STRIPE_SECRET_KEY=sk_live_...`
+
+4. Run migrations and collect static files:
+
+```bash
+python manage.py migrate
+python manage.py collectstatic --noinput
+```
+
+5. Serve with Gunicorn behind Nginx (or Hostinger Python app service if available for your plan).
+
+6. In Stripe Dashboard, add your production domain to allowed return URLs and test live checkout flow.
+
 ## Email Configuration
 
 Contact form email settings are read from environment variables in `Lafont_Flowers/settings.py`.

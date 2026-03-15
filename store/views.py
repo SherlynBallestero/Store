@@ -1,8 +1,12 @@
 from django.shortcuts import render
 from .models import Product, OrderDetail,Order, Customer, FeaturedProducts
-from .forms import ContactForm
+from .forms import ContactForm, CustomerProfileForm
+from .forms import ContactForm, CustomerProfileForm, CheckoutForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+import stripe
+from django.conf import settings as django_settings
 from django.conf import settings
 from django.core.mail import send_mail
 from django.urls import reverse
@@ -253,3 +257,212 @@ def contact_view(request):
         form = ContactForm()
 
     return render(request, "store/contact.html", {"form": form})
+
+
+@login_required
+def profile_view(request):
+    default_email = request.user.email or f"{request.user.username}@noemail.local"
+    customer, _ = Customer.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "name": request.user.get_full_name() or request.user.username,
+            "email": default_email,
+            "address": "",
+            "phone": "",
+            "preferred_address": "",
+        },
+    )
+
+    if request.method == "POST":
+        form = CustomerProfileForm(request.POST, instance=customer, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your profile has been updated.")
+            return redirect("profile")
+    else:
+        form = CustomerProfileForm(instance=customer, user=request.user)
+
+    return render(request, "store/profile.html", {"form": form, "customer": customer})
+
+
+@login_required
+def checkout_view(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        messages.error(request, "Your cart is empty.")
+        return redirect('cart')
+
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.objects.filter(id__in=product_ids)
+    product_map = {str(p.id): p for p in products}
+
+    cart_items = []
+    total = 0
+    for product_id, quantity in cart.items():
+        product = product_map.get(product_id)
+        if not product or not product.pack_price:
+            continue
+        subtotal = product.pack_price * quantity
+        total += subtotal
+        cart_items.append({"product": product, "quantity": quantity, "subtotal": subtotal})
+
+    if not cart_items:
+        messages.error(request, "Your cart is empty.")
+        return redirect('cart')
+
+    default_email = request.user.email or ""
+    customer = Customer.objects.filter(user=request.user).first()
+
+    if request.method == "POST":
+        form = CheckoutForm(request.POST)
+        if form.is_valid():
+            if not django_settings.STRIPE_SECRET_KEY.startswith("sk_"):
+                messages.error(request, "Stripe is not configured correctly. STRIPE_SECRET_KEY must start with 'sk_test_' or 'sk_live_'.")
+                return render(request, "store/checkout.html", {
+                    "form": form,
+                    "cart_items": cart_items,
+                    "cart_total": total,
+                    "stripe_public_key": django_settings.STRIPE_PUBLIC_KEY,
+                })
+
+            stripe.api_key = django_settings.STRIPE_SECRET_KEY
+            line_items = []
+            for item in cart_items:
+                line_items.append({
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": item["product"].name},
+                        "unit_amount": int(item["product"].pack_price * 100),
+                    },
+                    "quantity": item["quantity"],
+                })
+
+            success_url = (
+                request.build_absolute_uri(reverse("checkout_success"))
+                + "?session_id={CHECKOUT_SESSION_ID}"
+            )
+            cancel_url = request.build_absolute_uri(reverse("cart"))
+
+            try:
+                session = stripe.checkout.Session.create(
+                    payment_method_types=["card"],
+                    line_items=line_items,
+                    mode="payment",
+                    success_url=success_url,
+                    cancel_url=cancel_url,
+                    customer_email=form.cleaned_data["email"],
+                )
+            except stripe.StripeError as e:
+                messages.error(request, "Payment service unavailable. Please try again.")
+                return render(request, "store/checkout.html", {
+                    "form": form, "cart_items": cart_items, "cart_total": total,
+                })
+
+            request.session["checkout_delivery"] = {
+                "full_name": form.cleaned_data["full_name"],
+                "email": form.cleaned_data["email"],
+                "phone": form.cleaned_data["phone"],
+                "delivery_address": form.cleaned_data["delivery_address"],
+                "notes": form.cleaned_data.get("notes", ""),
+            }
+
+            return redirect(session.url)
+    else:
+        initial = {
+            "full_name": customer.name if customer else "",
+            "email": (customer.email if customer else "") or default_email,
+            "phone": customer.phone if customer else "",
+            "delivery_address": (
+                customer.preferred_address or customer.address
+                if customer else ""
+            ),
+        }
+        form = CheckoutForm(initial=initial)
+
+    return render(request, "store/checkout.html", {
+        "form": form,
+        "cart_items": cart_items,
+        "cart_total": total,
+        "stripe_public_key": django_settings.STRIPE_PUBLIC_KEY,
+    })
+
+
+@login_required
+def stripe_success_view(request):
+    session_id = request.GET.get("session_id", "").strip()
+    if not session_id:
+        return redirect("home")
+
+    # Idempotency: return existing order if already processed
+    existing_order = Order.objects.filter(stripe_session_id=session_id).first()
+    if existing_order:
+        return redirect("confirmation", pk=existing_order.pk)
+
+    stripe.api_key = django_settings.STRIPE_SECRET_KEY
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except stripe.StripeError:
+        messages.error(request, "Could not verify payment. Please contact us.")
+        return redirect("home")
+
+    if session.payment_status != "paid":
+        messages.error(request, "Payment was not completed.")
+        return redirect("cart")
+
+    delivery = request.session.pop("checkout_delivery", {})
+    cart = request.session.pop("cart", {})
+
+    if not cart:
+        messages.error(request, "Your cart was empty when processing the order. Please contact us if you were charged.")
+        return redirect("home")
+
+    customer, _ = Customer.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "name": delivery.get("full_name") or request.user.username,
+            "email": request.user.email or f"{request.user.username}@noemail.local",
+            "address": delivery.get("delivery_address", ""),
+            "phone": delivery.get("phone", ""),
+        },
+    )
+
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.objects.filter(id__in=product_ids)
+    product_map = {str(p.id): p for p in products}
+
+    order = Order.objects.create(
+        customer=customer,
+        total=0,
+        status="pending",
+        delivery_address=delivery.get("delivery_address", ""),
+        notes=delivery.get("notes", ""),
+        stripe_session_id=session_id,
+    )
+
+    order_total = 0
+    for product_id, quantity in cart.items():
+        product = product_map.get(product_id)
+        if not product or not product.pack_price:
+            continue
+        price = product.pack_price
+        OrderDetail.objects.create(order=order, product=product, quantity=quantity, price=price)
+        order_total += price * quantity
+
+    order.total = order_total
+    order.save()
+
+    return redirect("confirmation", pk=order.pk)
+
+
+def confirmation_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    # Only the customer who placed the order (or staff) can see it
+    if not request.user.is_staff:
+        customer = Customer.objects.filter(user=request.user).first()
+        if not customer or order.customer != customer:
+            raise Http404
+    order_items = order.orderdetail_set.select_related("product").all()
+    return render(request, "store/confirmation.html", {
+        "order": order,
+        "order_items": order_items,
+    })

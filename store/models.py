@@ -58,6 +58,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     address = models.CharField(max_length=255)
+    preferred_address = models.CharField(max_length=255, blank=True, default='')
     phone = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
@@ -68,6 +69,9 @@ class Order(models.Model):
     purchase_date = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=50, choices=[('pending', 'Pending'), ('shipped', 'Shipped'), ('completed', 'Completed')], default='pending')
+    delivery_address = models.CharField(max_length=500, blank=True, default='')
+    notes = models.TextField(blank=True, default='')
+    stripe_session_id = models.CharField(max_length=200, blank=True, default='', db_index=True)
 
     def __str__(self):
         return f"Order {self.id} - {self.customer.name}"

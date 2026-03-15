@@ -1,0 +1,79 @@
+{% extends "store/layout.html" %}
+
+{% block title %}Order Confirmed | Lafont's Flowers{% endblock %}
+
+{% block body %}
+<section class="py-5">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-12 col-lg-7">
+
+				<!-- Success banner -->
+				<div class="text-center mb-5">
+					<div class="display-3 text-success mb-3">
+						<i class="fa-solid fa-circle-check"></i>
+					</div>
+					<h2 class="fw-bold">Thank you for your order!</h2>
+					<p class="text-muted">Order <strong>#{{ order.id }}</strong> has been placed successfully. We'll contact you soon with delivery details.</p>
+				</div>
+
+				<!-- Order details card -->
+				<div class="card border-0 shadow-sm mb-4">
+					<div class="card-body p-4">
+						<h5 class="mb-3">Order Details</h5>
+
+						<ul class="list-group list-group-flush mb-4">
+							{% for item in order_items %}
+							<li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+								<div>
+									<span class="fw-semibold">{{ item.product.name }}</span>
+									<span class="text-muted small d-block">Qty: {{ item.quantity }} &times; ${{ item.price }}</span>
+								</div>
+								<span>${{ item.subtotal }}</span>
+							</li>
+							{% endfor %}
+						</ul>
+
+						<div class="d-flex justify-content-between fw-bold fs-5 border-top pt-3">
+							<span>Total Paid</span>
+							<span>${{ order.total }}</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Delivery info card -->
+				<div class="card border-0 shadow-sm mb-4">
+					<div class="card-body p-4">
+						<h5 class="mb-3">Delivery Information</h5>
+						<dl class="row mb-0">
+							<dt class="col-sm-4 text-muted">Date</dt>
+							<dd class="col-sm-8">{{ order.purchase_date|date:"N j, Y, g:i a" }}</dd>
+
+							<dt class="col-sm-4 text-muted">Status</dt>
+							<dd class="col-sm-8">
+								<span class="badge bg-warning text-dark text-capitalize">{{ order.get_status_display }}</span>
+							</dd>
+
+							{% if order.delivery_address %}
+							<dt class="col-sm-4 text-muted">Address</dt>
+							<dd class="col-sm-8">{{ order.delivery_address }}</dd>
+							{% endif %}
+
+							{% if order.notes %}
+							<dt class="col-sm-4 text-muted">Notes</dt>
+							<dd class="col-sm-8">{{ order.notes }}</dd>
+							{% endif %}
+						</dl>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<a href="{% url 'catalog' %}" class="btn btn-primary me-2">Continue Shopping</a>
+					<a href="{% url 'profile' %}" class="btn btn-outline-secondary">View My Orders</a>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}

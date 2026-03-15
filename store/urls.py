@@ -1,8 +1,10 @@
 from django.urls import path
 from .views import (
-    login_view, index, register, add_to_cart, cart_view, catalog_view, product_detail_view, logout_view, contact_view  # Add more views here as you define them (e.g., add_to_cart)
+    login_view, index, register, add_to_cart, cart_view, catalog_view, product_detail_view,
+    logout_view, contact_view, profile_view,
+    checkout_view, stripe_success_view, confirmation_view,
 )
-from django.views.generic import TemplateView  # For placeholders
+from django.views.generic import TemplateView
 
 urlpatterns = [
   
@@ -17,16 +19,17 @@ urlpatterns = [
     # Cart and Checkout
     path('cart/', cart_view, name='cart'),
     path('add-to-cart/<int:pk>/', add_to_cart, name='add_to_cart'),  # Uncommented; define add_to_cart in views.py if not already
-    path('checkout/', TemplateView.as_view(template_name='store/checkout.html'), name='checkout'),
-    path('confirmation/<int:pk>/', TemplateView.as_view(template_name='store/confirmation.html'), name='confirmation'),
+    path('checkout/', checkout_view, name='checkout'),
+    path('checkout/success/', stripe_success_view, name='checkout_success'),
+    path('confirmation/<int:pk>/', confirmation_view, name='confirmation'),
     
     # Auth
     path('register/', register, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     
-    # Profile (Placeholder)
-    path('profile/', TemplateView.as_view(template_name='store/profile.html'), name='profile'),
+    # Profile
+    path('profile/', profile_view, name='profile'),
     
     # About and Contact (Placeholders)
     path('about/', TemplateView.as_view(template_name='store/about.html'), name='about'),
