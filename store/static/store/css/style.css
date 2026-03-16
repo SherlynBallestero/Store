@@ -75,14 +75,76 @@ body {
     display: block;
 }
 
+.favorite-form {
+    margin: 0;
+}
+
+.favorite-btn {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d9cecb;
+    border-radius: 999px;
+    background-color: #fff;
+    color: #8b6d70;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.favorite-btn:hover {
+    background-color: #f8efee;
+    color: #a15362;
+    border-color: #cdaeb3;
+}
+
+.favorite-btn.is-active {
+    background-color: #f5e2e5;
+    color: #b24558;
+    border-color: #d89aa5;
+}
+
+.favorite-btn-detail {
+    flex-shrink: 0;
+}
+
+.favorite-product-card {
+    overflow: hidden;
+}
+
 
 /* Follow Section */
 .follow {
     background-color: #f5e9e6; /* Light pink */
 }
 .follow img {
-    height: 300x;
+    height: 350px;
    
+}
+
+/* Divisor Icons Section */
+.divisor-icons {
+    background-color:  #f5e9e6;
+}
+
+.divisor-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: #8b9d83;
+}
+
+.divisor-icon-item ion-icon {
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+}
+
+.divisor-icon-item span {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .event-text-col {
@@ -97,6 +159,9 @@ body {
 
 
 /* Featured Products Section */
+.featured{
+    background-color: #f8f9fa;
+}
 .featured .card {
     border: 1px solid #ddd;
 }
@@ -145,6 +210,11 @@ body {
         margin-top: 0.8rem;
         text-align: left;
         padding-left: calc(var(--bs-gutter-x) * 0.5);
+    }
+
+    .favorite-btn {
+        width: 40px;
+        height: 40px;
     }
 }
 
@@ -227,9 +297,15 @@ body {
     color: #2f2a28;
 }
 
+.about-section-title {
+    font-family: 'Playfair Display', serif;
+    color: #2f2a28;
+}
+
 .about-lead {
     font-size: 1.05rem;
     color: #5c5653;
+    line-height: 1.75;
 }
 
 .about-hero-img {
@@ -246,6 +322,7 @@ body {
 .about-story p {
     color: #5f5a57;
     line-height: 1.8;
+    font-size: 1.02rem;
 }
 
 .about-values {
@@ -281,6 +358,86 @@ body {
 .about-cta-btn:hover {
     background-color: #74866c;
     border-color: #74866c;
+}
+
+.about-copy {
+    max-width: 640px;
+}
+
+.about-hero-media {
+    display: flex;
+    justify-content: center;
+}
+
+.about-cta-inner {
+    max-width: 760px;
+}
+
+@media (max-width: 991px) {
+    .about-hero-img {
+        max-height: 360px;
+    }
+}
+
+@media (max-width: 768px) {
+    .about-page-hero,
+    .about-story,
+    .about-values,
+    .about-cta {
+        padding-top: 2.4rem !important;
+        padding-bottom: 2.4rem !important;
+    }
+
+    .about-eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.09em;
+        text-align: center;
+    }
+
+    .about-title {
+        font-size: clamp(1.7rem, 8vw, 2.25rem);
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .about-lead {
+        font-size: 0.98rem;
+        text-align: left;
+        margin-inline: auto;
+    }
+
+    .about-hero-media {
+        margin-top: 0.15rem;
+    }
+
+    .about-hero-img {
+        max-height: 290px;
+        border-radius: 16px !important;
+    }
+
+    .about-story p {
+        text-align: left;
+        font-size: 0.98rem;
+    }
+
+    .value-card {
+        padding: 1.1rem;
+    }
+
+    .value-card p {
+        font-size: 0.95rem;
+    }
+
+    .about-cta p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 32ch;
+    }
+
+    .about-cta-btn {
+        width: 100%;
+        max-width: 260px;
+    }
 }
 
 /* Contact */

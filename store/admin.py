@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import Product, Order, OrderDetail, Customer, FeaturedProducts
+from .models import Product, Order, OrderDetail, Customer, FeaturedProducts, Favorite
 
 
 # Register your models here.
@@ -9,3 +9,4 @@ admin.site.register(Order)
 admin.site.register(OrderDetail)
 admin.site.register(Customer)
 admin.site.register(FeaturedProducts)
+admin.site.register(Favorite)

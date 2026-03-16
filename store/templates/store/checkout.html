@@ -93,9 +93,19 @@
 							{% endfor %}
 						</ul>
 
-						<div class="d-flex justify-content-between fw-bold fs-5 border-top pt-3">
-							<span>Total</span>
-							<span>${{ cart_total }}</span>
+						<div class="border-top pt-3">
+							<div class="d-flex justify-content-between mb-1">
+								<span>Subtotal</span>
+								<span>${{ cart_subtotal }}</span>
+							</div>
+							<div class="d-flex justify-content-between mb-2 text-muted">
+								<span>Taxes ({{ tax_rate_percent }}%)</span>
+								<span>${{ cart_tax }}</span>
+							</div>
+							<div class="d-flex justify-content-between fw-bold fs-5">
+								<span>Total</span>
+								<span>${{ cart_total }}</span>
+							</div>
 						</div>
 
 						<a href="{% url 'cart' %}" class="btn btn-outline-secondary btn-sm w-100 mt-3">

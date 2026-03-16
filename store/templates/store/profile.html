@@ -1,4 +1,5 @@
 {% extends "store/layout.html" %}
+{% load static %}
 
 {% block title %}My Profile | Lafont's Flowers{% endblock %}
 
@@ -9,22 +10,22 @@
         <!-- Tab navigation -->
         <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                <button class="nav-link {% if active_tab == 'overview' %}active{% endif %}" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="{% if active_tab == 'overview' %}true{% else %}false{% endif %}">
                     My Profile
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">
+                <button class="nav-link {% if active_tab == 'orders' %}active{% endif %}" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="{% if active_tab == 'orders' %}true{% else %}false{% endif %}">
                     My Orders
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link {% if form.errors %}active{% endif %}" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab" aria-controls="edit" aria-selected="false">
+                <button class="nav-link {% if active_tab == 'edit' %}active{% endif %}" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab" aria-controls="edit" aria-selected="{% if active_tab == 'edit' %}true{% else %}false{% endif %}">
                     Update Profile
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="false">
+                <button class="nav-link {% if active_tab == 'favorites' %}active{% endif %}" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="{% if active_tab == 'favorites' %}true{% else %}false{% endif %}">
                     Favorites
                 </button>
             </li>
@@ -34,7 +35,7 @@
         <div class="tab-content" id="profileTabsContent">
 
             <!-- My Profile: read-only overview -->
-            <div class="tab-pane fade show {% if not form.errors %}active{% endif %}" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            <div class="tab-pane fade {% if active_tab == 'overview' %}show active{% endif %}" id="overview" role="tabpanel" aria-labelledby="overview-tab">
                 <div class="row justify-content-center">
                     <div class="col-12 col-lg-8">
                         <div class="card shadow-sm border-0">
@@ -73,13 +74,29 @@
             </div>
 
             <!-- My Orders -->
-            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+            <div class="tab-pane fade {% if active_tab == 'orders' %}show active{% endif %}" id="orders" role="tabpanel" aria-labelledby="orders-tab">
                 <div class="row justify-content-center">
                     <div class="col-12 col-lg-8">
                         <div class="card shadow-sm border-0">
                             <div class="card-body p-4 p-md-5">
                                 <h2 class="mb-4">My Orders</h2>
-                                <p class="text-muted">Your order history will appear here.</p>
+                                {% if orders %}
+                                    <ul class="list-group">
+                                        {% for order in orders %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>Order #{{ order.id }}</strong>
+                                                    <div class="text-muted small">Placed on {{ order.purchase_date|date:"N j, Y, g:i a" }}</div>
+                                                    <div class="text-muted small">Total: ${{ order.total }}</div>
+                                                    <div class="text-muted small">Status: {{ order.get_status_display }}</div>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">You haven't placed any orders yet.</p>
+                                {% endif %}
+
                             </div>
                         </div>
                     </div>
@@ -87,7 +104,7 @@
             </div>
 
             <!-- Update Profile: edit form -->
-            <div class="tab-pane fade {% if form.errors %}show active{% endif %}" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+            <div class="tab-pane fade {% if active_tab == 'edit' %}show active{% endif %}" id="edit" role="tabpanel" aria-labelledby="edit-tab">
                 <div class="row justify-content-center">
                     <div class="col-12 col-lg-8">
                         <div class="card shadow-sm border-0">
@@ -166,13 +183,43 @@
             </div>
 
             <!-- Favorites -->
-            <div class="tab-pane fade" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
+            <div class="tab-pane fade {% if active_tab == 'favorites' %}show active{% endif %}" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
                 <div class="row justify-content-center">
                     <div class="col-12 col-lg-8">
                         <div class="card shadow-sm border-0">
                             <div class="card-body p-4 p-md-5">
                                 <h2 class="mb-4">Favorites</h2>
-                                <p class="text-muted">Your saved products will appear here.</p>
+                                {% if favorites %}
+                                    <div class="row g-3">
+                                        {% for favorite in favorites %}
+                                            <div class="col-12 col-md-6">
+                                                <div class="card h-100 border-0 shadow-sm favorite-product-card">
+                                                    {% if favorite.product.url_image %}
+                                                        <img src="{{ favorite.product.url_image }}" class="catalog-img" alt="{{ favorite.product.name }}">
+                                                    {% else %}
+                                                        <img src="{% static 'images/flowers.jpg' %}" class="catalog-img" alt="{{ favorite.product.name }}">
+                                                    {% endif %}
+                                                    <div class="card-body d-flex flex-column">
+                                                        <h5 class="card-title">{{ favorite.product.name }}</h5>
+                                                        <p class="text-muted mb-3">{{ favorite.product.get_type_display }}{% if favorite.product.color %} | {{ favorite.product.color }}{% endif %}</p>
+                                                        <p class="mb-3">Pack price: ${{ favorite.product.pack_price }}</p>
+                                                        <div class="d-grid gap-2 mt-auto">
+                                                            <a href="{% url 'product_detail' favorite.product.id %}" class="btn btn-outline-info">View details</a>
+                                                            <form method="post" action="{% url 'toggle_favorite' favorite.product.id %}">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="next" value="{% url 'profile' %}?tab=favorites">
+                                                                <button type="submit" class="btn btn-outline-secondary w-100">Remove from favorites</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted mb-3">You have not saved any products yet.</p>
+                                    <a href="{% url 'catalog' %}" class="btn btn-outline-secondary">Explore catalog</a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

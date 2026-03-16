@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     login_view, index, register, add_to_cart, cart_view, catalog_view, product_detail_view,
-    logout_view, contact_view, profile_view,
+    logout_view, contact_view, profile_view, toggle_favorite,
     checkout_view, stripe_success_view, confirmation_view,
 )
 from django.views.generic import TemplateView
@@ -15,6 +15,7 @@ urlpatterns = [
     
     # Product Details
     path('product/<int:pk>/', product_detail_view, name='product_detail'),
+    path('favorites/toggle/<int:pk>/', toggle_favorite, name='toggle_favorite'),
     
     # Cart and Checkout
     path('cart/', cart_view, name='cart'),

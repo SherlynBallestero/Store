@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Product, OrderDetail,Order, Customer, FeaturedProducts
+from .models import Product, OrderDetail,Order, Customer, FeaturedProducts, Favorite
 from .forms import ContactForm, CustomerProfileForm
 from .forms import ContactForm, CustomerProfileForm, CheckoutForm
 from django.contrib.auth import authenticate, login, logout
@@ -10,13 +10,28 @@ from django.conf import settings as django_settings
 from django.conf import settings
 from django.core.mail import send_mail
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseRedirect,Http404
+from django.http import HttpResponse, HttpResponseRedirect,Http404, JsonResponse
 from django.db import IntegrityError
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponseRedirect
 from django.contrib import messages  # Para mensajes de error/exito
+from django.views.decorators.http import require_POST
+from decimal import Decimal, ROUND_HALF_UP
 
 
  # Create your views here.
+
+TAX_RATE = Decimal("0.075")
+
+
+def _favorite_product_ids(user, products=None):
+    if not user.is_authenticated:
+        return set()
+
+    favorites = Favorite.objects.filter(user=user)
+    if products is not None:
+        favorites = favorites.filter(product__in=products)
+
+    return set(favorites.values_list("product_id", flat=True))
 
 def login_view(request):
     if request.method == "POST":
@@ -193,9 +208,11 @@ def catalog_view(request):
         products = products.filter(unit_price__lte=max_price)
 
     available_colors = Product.objects.exclude(color="").values_list("color", flat=True).distinct().order_by("color")
+    favorite_product_ids = _favorite_product_ids(request.user, products)
 
     return render(request, "store/catalog.html", {
         "products": products,
+        "favorite_product_ids": favorite_product_ids,
         "available_colors": available_colors,
         "product_types": Product._meta.get_field("type").choices,
         "selected_type": selected_type,
@@ -213,7 +230,38 @@ def product_detail_view(request, pk):
     return render(request, "store/product_detail.html", {
         "product": product,
         "pack_price": pack_price,
+        "is_favorite": request.user.is_authenticated and Favorite.objects.filter(user=request.user, product=product).exists(),
     })
+
+
+@login_required
+@require_POST
+def toggle_favorite(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
+    is_favorite = created
+
+    if not created:
+        favorite.delete()
+        is_favorite = False
+
+    is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+    if is_ajax:
+        return JsonResponse({
+            "ok": True,
+            "product_id": product.pk,
+            "is_favorite": is_favorite,
+        })
+
+    next_url = request.POST.get("next")
+    if next_url:
+        return redirect(next_url)
+
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return HttpResponseRedirect(referer)
+
+    return redirect("product_detail", pk=product.pk)
 
 
 def contact_view(request):
@@ -284,16 +332,35 @@ def profile_view(request):
         },
     )
 
+    active_tab = request.GET.get("tab", "overview")
+    if active_tab not in {"overview", "orders", "edit", "favorites"}:
+        active_tab = "overview"
+
     if request.method == "POST":
         form = CustomerProfileForm(request.POST, instance=customer, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Your profile has been updated.")
             return redirect("profile")
+        active_tab = "edit"
     else:
         form = CustomerProfileForm(instance=customer, user=request.user)
 
-    return render(request, "store/profile.html", {"form": form, "customer": customer})
+    orders = (
+        Order.objects
+        .filter(customer=customer)
+        .order_by("-purchase_date")
+    )
+
+    favorites = Favorite.objects.filter(user=request.user).select_related("product")
+
+    return render(request, "store/profile.html", {
+        "form": form,
+        "customer": customer,
+        "orders": orders,
+        "favorites": favorites,
+        "active_tab": active_tab,
+    })
 
 
 @login_required
@@ -308,14 +375,17 @@ def checkout_view(request):
     product_map = {str(p.id): p for p in products}
 
     cart_items = []
-    total = 0
+    subtotal_total = Decimal("0.00")
     for product_id, quantity in cart.items():
         product = product_map.get(product_id)
         if not product or not product.pack_price:
             continue
         subtotal = product.pack_price * quantity
-        total += subtotal
+        subtotal_total += subtotal
         cart_items.append({"product": product, "quantity": quantity, "subtotal": subtotal})
+
+    tax_total = (subtotal_total * TAX_RATE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    grand_total = subtotal_total + tax_total
 
     if not cart_items:
         messages.error(request, "Your cart is empty.")
@@ -332,7 +402,10 @@ def checkout_view(request):
                 return render(request, "store/checkout.html", {
                     "form": form,
                     "cart_items": cart_items,
-                    "cart_total": total,
+                    "cart_subtotal": subtotal_total,
+                    "cart_tax": tax_total,
+                    "cart_total": grand_total,
+                    "tax_rate_percent": "7.5",
                     "stripe_public_key": django_settings.STRIPE_PUBLIC_KEY,
                 })
 
@@ -346,6 +419,16 @@ def checkout_view(request):
                         "unit_amount": int(item["product"].pack_price * 100),
                     },
                     "quantity": item["quantity"],
+                })
+
+            if tax_total > 0:
+                line_items.append({
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {"name": "Sales Tax (7.5%)"},
+                        "unit_amount": int(tax_total * 100),
+                    },
+                    "quantity": 1,
                 })
 
             success_url = (
@@ -366,7 +449,12 @@ def checkout_view(request):
             except stripe.StripeError as e:
                 messages.error(request, "Payment service unavailable. Please try again.")
                 return render(request, "store/checkout.html", {
-                    "form": form, "cart_items": cart_items, "cart_total": total,
+                    "form": form,
+                    "cart_items": cart_items,
+                    "cart_subtotal": subtotal_total,
+                    "cart_tax": tax_total,
+                    "cart_total": grand_total,
+                    "tax_rate_percent": "7.5",
                 })
 
             request.session["checkout_delivery"] = {
@@ -393,7 +481,10 @@ def checkout_view(request):
     return render(request, "store/checkout.html", {
         "form": form,
         "cart_items": cart_items,
-        "cart_total": total,
+        "cart_subtotal": subtotal_total,
+        "cart_tax": tax_total,
+        "cart_total": grand_total,
+        "tax_rate_percent": "7.5",
         "stripe_public_key": django_settings.STRIPE_PUBLIC_KEY,
     })
 
@@ -450,16 +541,17 @@ def stripe_success_view(request):
         stripe_session_id=session_id,
     )
 
-    order_total = 0
+    order_subtotal = Decimal("0.00")
     for product_id, quantity in cart.items():
         product = product_map.get(product_id)
         if not product or not product.pack_price:
             continue
         price = product.pack_price
         OrderDetail.objects.create(order=order, product=product, quantity=quantity, price=price)
-        order_total += price * quantity
+        order_subtotal += price * quantity
 
-    order.total = order_total
+    order_tax = (order_subtotal * TAX_RATE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    order.total = order_subtotal + order_tax
     order.save()
 
     return redirect("confirmation", pk=order.pk)
@@ -473,7 +565,15 @@ def confirmation_view(request, pk):
         if not customer or order.customer != customer:
             raise Http404
     order_items = order.orderdetail_set.select_related("product").all()
+    order_subtotal = sum((item.subtotal() for item in order_items), Decimal("0.00"))
+    order_tax = (order.total - order_subtotal).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if order_tax < 0:
+        order_tax = Decimal("0.00")
+
     return render(request, "store/confirmation.html", {
         "order": order,
         "order_items": order_items,
+        "order_subtotal": order_subtotal,
+        "order_tax": order_tax,
+        "tax_rate_percent": "7.5",
     })
