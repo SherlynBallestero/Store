@@ -36,11 +36,16 @@
                     {% if product.grade %}
                         <p class="mb-1"><strong>Grade:</strong> {{ product.grade }}</p>
                     {% endif %}
-                    <p class="mb-0"><strong>Stock available:</strong> {{ product.available_quantity }}</p>
+                    <p class="mb-0"><strong>Availability:</strong> {% if product.is_available %}In stock{% else %}Out of stock{% endif %}</p>
                 </div>
 
-                {% if product.available_quantity > 0 %}
-                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to cart</a>
+                {% if product.is_available %}
+                    <form method="post" action="{% url 'add_to_cart' product.id %}" class="d-flex gap-2 align-items-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <input type="number" name="quantity" min="1" value="1" class="form-control" style="max-width: 110px;">
+                        <button type="submit" class="btn btn-primary">Add to cart</button>
+                    </form>
                 {% else %}
                     <button class="btn btn-secondary" disabled>Out of stock</button>
                 {% endif %}

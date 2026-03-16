@@ -84,16 +84,30 @@ def index(request):
 
 def add_to_cart(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    if product.available_quantity > 0:
+    quantity = 1
+
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", "1"))
+        except ValueError:
+            quantity = 1
+
+    if quantity < 1:
+        quantity = 1
+
+    if product.is_available:
         cart = request.session.get('cart', {})  # Obtiene el carrito de la sesión (dict: {product_id: quantity})
         cart_key = str(product.id)  # Usa str para claves
-        cart[cart_key] = cart.get(cart_key, 0) + 1  # Incrementa cantidad
+        cart[cart_key] = cart.get(cart_key, 0) + quantity  # Incrementa cantidad
         request.session['cart'] = cart  # Guarda de vuelta
-        messages.success(request, f'{product.name} added to cart!')
+        messages.success(request, f'{quantity} x {product.name} added to cart!')
     else:
         messages.error(request, f'{product.name} is out of stock.')
-    
-    # Redirige a la página anterior (o a catálogo si no hay referer)
+
+    next_url = request.POST.get('next') if request.method == 'POST' else None
+    if next_url:
+        return redirect(next_url)
+
     referer = request.META.get('HTTP_REFERER')
     if referer:
         return HttpResponseRedirect(referer)
@@ -194,10 +208,7 @@ def catalog_view(request):
 
 def product_detail_view(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    pack_price = None
-
-    if product.pack_quantity:
-        pack_price = product.unit_price * product.pack_quantity
+    pack_price = product.pack_price
 
     return render(request, "store/product_detail.html", {
         "product": product,

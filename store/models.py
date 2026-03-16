@@ -1,50 +1,57 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from decimal import Decimal, InvalidOperation
 
 
 
 class Product(models.Model):
+    TYPE_CHOICES = [
+        ('Roses', 'Roses'),
+        ('Spray Roses', 'Spray Roses'),
+        ('6 Roses Bqt', '6 Roses Bouquets'),
+        ('1 St Rose Bqt', 'Rose Bouquets'),
+        ('Bouquets 12 Stem', 'Bouquets 12 Stem'),
+        ('Carnations', 'Carnations'),
+        ('Mini Carnations', 'Mini Carnations'),
+        ('Dianthus', 'Dianthus'),
+        ('Statice', 'Statice'),
+        ('Snapdragons', 'Snapdragons'),
+        ('Asters', 'Asters'),
+        ('Gypsophilia', 'Gypsophilia'),
+        ('Lilies Oriental', 'Lilies Oriental'),
+        ('Lilies L.A. Hybrid', 'Lilies L.A. Hybrid'),
+        ('Hydrangeas', 'Hydrangeas'),
+        ('Alstromeria', 'Alstromeria'),
+        ('Hypericum', 'Hypericum'),
+        ('Pom Poms', 'Pom Poms'),
+        ('Mums Fuji or Cremon', 'Mums Fuji or Cremon'),
+        ('Supermums', 'Supermums'),
+        ('Limonium', 'Limonium'),
+        ('Sinensis', 'Sinensis'),
+    ]
+
     name = models.CharField(max_length=100)
-    type = models.CharField(max_length=50, choices=[('flower', 'Flower'), ('floral_arrangement', 'Floral Arrangement'), ('gift', 'Gift')])
+    pack_quantity = models.CharField(max_length=50, choices=[(175,'175'), (200,'200'), (250,'250'), (120,'120'), (30,'30'), (32,'32'), (15,'15'),(16,'16'),(18,'18'),(80,'80'),(12,'12'),(10,'10'),(13,'13'),(10,'10'),(40,'40'),(70,'70'),(34,'34'),(50,'50'),(9,'9'),(90,'90'),(14,'14')],default=50)
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='Roses')
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     color=models.CharField(max_length=100)
-    available_quantity = models.PositiveIntegerField(default=0)
+    is_available = models.BooleanField(default=True)
     url_image=models.URLField(blank=True)
-    code=models.CharField(max_length=100,default='1AFD')
+    code=models.CharField(max_length=100,default='')
     grade=models.CharField(max_length=100, blank=True, default='')
-    pack_quantity=models.PositiveIntegerField(null=True, blank=True)
     pack_unit= models.CharField(max_length=4, choices=[('st', 'st'),('bu','bu')], blank=True, default='')
 
     @property
     def pack_price(self):
         if self.pack_quantity:
-            return self.unit_price * self.pack_quantity
+            try:
+                return self.unit_price * Decimal(str(self.pack_quantity))
+            except (InvalidOperation, TypeError):
+                return None
         return None
 
-    def clean(self):
-        errors = {}
-
-        if self.type == 'flower':
-            if not self.grade:
-                errors['grade'] = 'Grade is required for flower products.'
-            if not self.pack_quantity:
-                errors['pack_quantity'] = 'Pack quantity is required for flower products.'
-            if not self.pack_unit:
-                errors['pack_unit'] = 'Pack unit is required for flower products.'
-        else:
-            # For non-flower products these fields should stay empty.
-            self.grade = ''
-            self.pack_quantity = None
-            self.pack_unit = ''
-
-        if errors:
-            raise ValidationError(errors)
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
