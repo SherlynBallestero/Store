@@ -116,28 +116,22 @@
 
 <!-- Contact us -->
 <section class="follow py-5 text-center">
-   <div class="container text-center">
-  <div class="row">
-    <div class="col">
-        <figure class="figure">
-            <img src="{% static 'images/lf.png' %}" class="figure-img img-fluid rounded" alt="Wedding">
-            <img src="{% static 'images/table.jpg' %}" class="figure-img img-fluid rounded" alt="Wedding">
-            <img src="{% static 'images/event.jpg' %}" class="figure-img img-fluid rounded" alt="Wedding">
-            <img src="{% static 'images/thank.png' %}" class="figure-img img-fluid rounded" alt="Wedding">
-        </figure>
+    <div class="container">
+        <div class="row event-grid align-items-center justify-content-center g-4">
+            <div class="col-12 col-md-6 col-lg-5">
+                <img src="{% static 'images/design.png' %}" class="img-fluid rounded event-img mx-auto d-block" alt="Floral setup">
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-6 text-center text-md-start">
+                <h2>Planning an event?</h2>
+                <p>We're here to help make it special! We offer beautiful fresh flowers in bulk, perfect for everything from weddings and corporate events to parties and beyond. Reach out to us for a custom order, and we'll work with you to create something truly memorable. Plus, enjoy our fast, secure delivery right to your door, available almost anywhere in South Florida.</p>
+                <a href="{% url 'contact' %}" class="btn btn-outline-secondary">Contact Us</a>
+            </div>
+        </div>
     </div>
-    <div class="col">
-        <h4> Planning an event?</h4> 
-        <p> We're here to help make it special!<br>
-         We offer beautiful fresh flowers in bulk, perfect for everything <br>
-        from weddings and corporate events to parties and beyond. Reach out to us <br>
-        for a custom order,and we'll work with you to create something truly memorable. <br>
-        Plus, enjoy our fast, secure delivery right to your door, available lmost <br>
-        anywhere in South Florida.</p>
-    <a href="{% url 'contact' %}" class="btn btn-outline-secondary">Contact Us</a>    
-    </div>
-  </div>
-   </div>
+
 </section>
+
+
 
 {% endblock %}

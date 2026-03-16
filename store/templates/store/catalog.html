@@ -67,7 +67,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                 <input type="number" name="quantity" min="1" value="1" class="form-control" style="max-width: 90px;">
-                                <button type="submit" class="btn btn-primary flex-grow-1">Add to cart</button>
+                                <button type="submit" class="btn btn-secondary flex-grow-1">Add to cart</button>
                             </form>
                             {% else %}
                             <button type="button" class="btn btn-secondary" disabled>Out of stock</button>

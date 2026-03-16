@@ -81,9 +81,20 @@ body {
     background-color: #f5e9e6; /* Light pink */
 }
 .follow img {
-    height: 200px;
-    object-fit: cover;
+    height: 300x;
+   
 }
+
+.event-text-col {
+    padding-left: 0.6rem;
+}
+
+.event-img {
+    width: 68%;
+    max-width: 360px;
+}
+
+
 
 /* Featured Products Section */
 .featured .card {
@@ -120,6 +131,20 @@ body {
         max-width: 82%;
         margin-bottom: 0;
         scroll-snap-align: start;
+    }
+
+    .event-grid {
+        --bs-gutter-x: 0.5rem;
+    }
+
+    .event-img {
+        height: 140px;
+    }
+
+    .event-text-col {
+        margin-top: 0.8rem;
+        text-align: left;
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
     }
 }
 
@@ -277,6 +302,9 @@ body {
     border-radius: 8px;
     background-color: #fafafa;
 }
+
+
+
 
 .contact-radio-group ul {
     margin: 0;
